@@ -19,6 +19,7 @@ type Exp =
   | If of Exp * Exp * Exp
   | App of Exp * Exp
   | Lambda of string * Type * Exp
+  | Error
   // UNDONE
   // | Fix of string * Type * Exp
 
@@ -40,41 +41,45 @@ let expression =
     )
   )
 
-// 何かがおかしい
-type Value =
-  | Number of int
-  | Bool of bool
-  | Variable of string*Type*Value
-  | Function of string*Exp
-  | Error
-
-type Env = string -> Value
+type Env = string -> Exp
 let emptyEnv (s: string) = Error
 
 let update env name value : Env =
   fun s -> if s = name then value else env(s);
 
-let applyNum f expResult =
-  match expResult with
-    | Number(x) -> f x
-    | _ -> Error
-
 let rec parse env exp =
   match exp with
-  | True -> Bool(true)
-  | False -> Bool(false)
-  | Zero -> Number(0)
-  | Succ(e) -> applyNum (fun x -> Number(x+1)) (parse env e)
-  | Pred(e) -> applyNum (fun x -> Number(max 0 (x-1))) (parse env e)
-  | IsZero(e) -> applyNum (fun x -> if x = 0 then Bool(true) else Bool(false)) (parse env e)
+  | True -> True
+  | False -> False
+  | Zero -> Zero
+  | Succ(e) -> 
+    let v = parse env e in
+    match v with
+    | Zero -> Succ(Zero)
+    | Succ(_) -> Succ(v)
+    | _ -> Error
+  | Pred(e) ->
+    match parse env e with
+    | Zero -> Zero
+    | Succ(x) -> x
+    | _ -> Error
+  | IsZero(e) ->
+    match parse env e with
+    | Zero -> True
+    | Succ(_) -> False
+    | _ -> Error
   | Var(s) -> env s
   | If(e1,e2,e3) ->
     match parse env e1 with
-      | Bool(b) -> if b then parse env e2 else parse env e3
+      | True -> parse env e2
+      | False -> parse env e3
       | _ -> Error
   // 以下未実装
+  (*
   | App(e1, e2) ->
     match parse env e1 with
       | Function(name,exp) -> parse env e2
       | _ -> Error
   | Lambda(name,t,exp) -> Function(name,exp)
+  *)
+  | _ -> Error
