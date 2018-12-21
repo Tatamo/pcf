@@ -20,6 +20,7 @@ type Exp =
   | If of Exp * Exp * Exp
   | App of Exp * Exp
   | Lambda of string * Exp
+  | Fix of string * Exp
   | Error of string option
   // UNDONE
   // | Fix of string * Type * Exp
@@ -106,16 +107,11 @@ let rec parse env exp stack =
         | Some(s) -> Error(Some(s))
         | _ -> Error(None)
     | _ -> Error(Some(String.Format("Error: {0} {1}",e1,e2)))
-  (*
-    match parse env e1 with
-    | Lambda(name,exp) -> parse (update env name (parse env e2)) exp
-    | Error(e) ->
-      match e with
-        | Some(s) -> Error(Some(s))
-        | _ -> Error(None)
-    | _ -> Error(Some(String.Format("Error: {0} {1}",e1,e2)))
-  *)
-  | Lambda(name,exp) -> Lambda(name,parse env exp (stack+1))
+  | Lambda(name,exp) -> Lambda(name, parse env exp (stack+1))
+  // | Fix(name,exp) -> parse (update env name exp) exp (stack+1)
+  // | Fix(name,exp) ->
+    // let self = parse env exp (stack+1) in
+    // parse (update env name self) self (stack+1)
   | Error(e) ->
     match e with
       | Some(s) -> Error(Some(s))
@@ -141,7 +137,7 @@ let expression =
     ),
     Succ(Zero)
   )
-test expression // => Succ (Succ (Succ Zero))
+// test expression // => Succ (Succ (Succ Zero))
 
 let curryFuncExp =
   App(
@@ -178,3 +174,40 @@ let funcFuncExp =
     )
   )
 // test funcFuncExp // => Succ Zero
+
+let simpleFixExp =
+  Fix(
+    "f",
+    Lambda(
+      "x",
+      App(
+        Var("f"),
+        Var("x")
+      )
+    )
+  )
+// test simpleFixExp
+
+let fixExp =
+  Fix(
+    "add",
+    Lambda(
+      "x",
+      Lambda(
+        "y",
+        If(
+          IsZero(Var("y")),
+          Var("x"),
+          App(
+            App(
+              Var("add"),
+              Succ(Var("x"))
+            ),
+            Pred(Var("y"))
+          )
+        )
+      )
+    )
+  )
+// test fixExp
+
