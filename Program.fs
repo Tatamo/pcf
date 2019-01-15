@@ -39,6 +39,32 @@ let update env name exp : Env =
     else
     if s = name then exp else env(s);
 
+// Succ^n(Zero) の形かどうかを判定する
+let rec isNumericValue exp =
+  match exp with
+  | Zero -> true
+  | Succ(e) -> isNumericValue(e)
+  | _ -> false
+
+let (|NumericValue|_|) (exp:Exp) =
+  if isNumericValue(exp) then Some(exp) else None
+
+let (|BooleanValue|_|) (exp:Exp) =
+  match exp with
+  | True -> Some(True)
+  | False -> Some(False)
+  | _ -> None
+
+// それ以上簡約できない閉じた項(=値)であるかどうかを判定する
+let isValue exp =
+  match exp with
+  | BooleanValue(_) | NumericValue(_)
+  | Lambda(_) | Fix(_) // λ抽象は常に値
+  | Error(_) -> true // エラーはとりあえず値ということにしておく
+  | _ -> false
+
+let (|Value|_|) (exp:Exp) = if isValue exp then Some(exp) else None
+
 let rec parse env exp stack =
   printfn "[%A]%A : %A" stack exp (env "debug");
   match exp with
@@ -175,6 +201,7 @@ let funcFuncExp =
   )
 // test funcFuncExp // => Succ Zero
 
+// μf.λx.fx
 let simpleFixExp =
   Fix(
     "f",
@@ -188,6 +215,7 @@ let simpleFixExp =
   )
 // test simpleFixExp
 
+// μadd.λxy.(if iszero y then x else add x y)
 let fixExp =
   Fix(
     "add",
@@ -209,5 +237,5 @@ let fixExp =
       )
     )
   )
-// test fixExp
+test fixExp
 
