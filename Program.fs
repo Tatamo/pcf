@@ -65,6 +65,62 @@ let isValue exp =
 
 let (|Value|_|) (exp:Exp) = if isValue exp then Some(exp) else None
 
+// Exp中に出現する変数名の集合を得る
+let rec fv exp =
+  match exp with
+  | Var(s) -> set [s]
+  | App(e1, e2) -> Set.union (fv e1) (fv e2)
+  | Lambda(name, exp) | Fix(name, exp) -> Set.remove name (fv exp)
+  | True | False | Zero | Error(_)-> Set.empty
+  | Succ(e) | Pred(e) | IsZero(e) -> fv e
+  | If(e1,e2,e3) -> Set.union (fv e1) (fv e2) |> Set.union (fv e3)
+  in let getFreeVariables = fv
+
+// TODO
+let substitution exp1 name exp2 = Error(None)
+
+let rec reduce exp =
+  match exp with
+  | Pred(e) -> reducePred e
+  | Succ(e) -> reduceSucc e
+  | IsZero(e) -> reduceIsZero e
+  | If(e1,e2,e3) -> reduceIf e1 e2 e3
+  | App(e1, e2) -> reduceApp e1 e2
+  | Fix(name, e) -> reduceFix name e
+  | _ -> Error(None)
+// Pred(exp) のexpが渡される
+and reducePred exp =
+  match exp with
+  | Zero -> Zero
+  | Succ(e) ->
+    match e with
+    | NumericValue(n) -> n
+    | _ -> Pred(reduce (Succ(e)))
+  | _ -> Pred(reduce exp)
+and reduceSucc exp =
+  match exp with
+  | NumericValue(_) -> Error(Some("value cannot be reduced"))
+  | _ -> Succ(reduce exp)
+and reduceIsZero exp =
+  match exp with
+  | Zero -> True
+  | Succ(e) ->
+    match e with
+    | NumericValue(_) -> False
+    | _ -> IsZero(Succ(reduce e))
+  | _ -> IsZero(reduce exp)
+and reduceIf exp1 exp2 exp3 =
+  match exp1 with
+  | True -> exp2
+  | False -> exp3
+  | _ -> If(reduce exp1, exp2, exp3)
+and reduceApp exp1 exp2 =
+  match exp1 with
+  | Lambda(name, exp) -> substitution exp name exp2
+  | _ -> App(reduce exp1, exp2)
+and reduceFix name exp =
+  substitution exp name (Fix(name,exp))
+
 let rec parse env exp stack =
   printfn "[%A]%A : %A" stack exp (env "debug");
   match exp with
@@ -238,4 +294,3 @@ let fixExp =
     )
   )
 test fixExp
-
