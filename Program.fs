@@ -65,7 +65,7 @@ let isValue exp =
 
 let (|Value|_|) (exp:Exp) = if isValue exp then Some(exp) else None
 
-// Exp中に出現する変数名の集合を得る
+// Exp中に出現する自由変数名の集合を得る
 let rec fv exp =
   match exp with
   | Var(s) -> set [s]
@@ -76,8 +76,33 @@ let rec fv exp =
   | If(e1,e2,e3) -> Set.union (fv e1) (fv e2) |> Set.union (fv e3)
   in let getFreeVariables = fv
 
-// TODO
-let substitution exp1 name exp2 = Error(None)
+let rec getNewVariableName fv baseName =
+  if Set.contains baseName fv then getNewVariableName fv (String.Format("{0}'", baseName)) else baseName
+
+let rec substitute exp1 name exp2 =
+  match exp1 with
+  | Var(name') -> if name' = name then exp2 else Var(name')
+  | App(e1,e2) -> App(substitute e1 name exp2, substitute e2 name exp2)
+  | Lambda(name', e) ->
+    if name' = name then Lambda(name', e) else
+    let fv1 = getFreeVariables e in
+    let fv2 = getFreeVariables exp2 in
+    if Set.contains name fv1 && Set.contains name' fv2 then
+      let freshName = getNewVariableName (Set.union fv1 fv2) name' in
+      Lambda(freshName, substitute (substitute e name' (Var freshName)) name exp2)
+    else
+      Lambda(name', substitute e name exp2)
+  | _ -> Error(None)
+
+(*
+let m = App(Var("x1"),Var("x2"))
+let n1 = App(Var("x2"), Var("y"))
+
+let s1 = substitute m "x1" n1
+let s2 = substitute s1 "x2" (Var("N2"))
+printfn "%A" s1
+printfn "%A" s2
+*)
 
 let rec reduce exp =
   match exp with
@@ -116,10 +141,10 @@ and reduceIf exp1 exp2 exp3 =
   | _ -> If(reduce exp1, exp2, exp3)
 and reduceApp exp1 exp2 =
   match exp1 with
-  | Lambda(name, exp) -> substitution exp name exp2
+  | Lambda(name, exp) -> substitute exp name exp2
   | _ -> App(reduce exp1, exp2)
 and reduceFix name exp =
-  substitution exp name (Fix(name,exp))
+  substitute exp name (Fix(name,exp))
 
 let rec parse env exp stack =
   printfn "[%A]%A : %A" stack exp (env "debug");
@@ -293,4 +318,5 @@ let fixExp =
       )
     )
   )
-test fixExp
+// test fixExp
+printfn "\n"
