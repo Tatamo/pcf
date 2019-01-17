@@ -59,7 +59,7 @@ let (|BooleanValue|_|) (exp:Exp) =
 let isValue exp =
   match exp with
   | BooleanValue(_) | NumericValue(_)
-  | Lambda(_) | Fix(_) // λ抽象は常に値
+  | Lambda(_) // λ抽象は常に値
   | Error(_) -> true // エラーはとりあえず値ということにしておく
   | _ -> false
 
@@ -80,7 +80,7 @@ let rec getNewVariableName fv baseName =
   if Set.contains baseName fv then getNewVariableName fv (String.Format("{0}'", baseName)) else baseName
 
 let rec substitute exp1 name exp2 =
-  printfn "substitute %A[%A:=%A]" exp1 name exp2
+//  printfn "substitute %A[%A:=%A]" exp1 name exp2
   let mapLambda _ name exp2 (name', e) =
     if name' = name then (name', e) else
     let fv1 = getFreeVariables e in
@@ -157,6 +157,9 @@ and reduceApp exp1 exp2 =
   | _ -> App(reduce exp1, exp2)
 and reduceFix name exp =
   substitute exp name (Fix(name,exp))
+
+let rec reduceAll exp =
+  if isValue exp then exp else reduceAll (reduce exp)
 
 let rec parse env exp stack =
   printfn "[%A]%A : %A" stack exp (env "debug");
@@ -257,6 +260,7 @@ let expression =
     Succ(Zero)
   )
 // test expression // => Succ (Succ (Succ Zero))
+printfn "%A" (reduceAll expression)
 
 let curryFuncExp =
   App(
@@ -277,6 +281,7 @@ let curryFuncExp =
     Succ(Zero)
   )
 // test curryFuncExp // => Succ (Succ Zero)
+printfn "%A" (reduceAll curryFuncExp)
 
 let funcFuncExp =
   App(
@@ -293,6 +298,7 @@ let funcFuncExp =
     )
   )
 // test funcFuncExp // => Succ Zero
+printfn "%A" (reduceAll funcFuncExp)
 
 // μf.λx.fx
 let simpleFixExp =
@@ -307,6 +313,7 @@ let simpleFixExp =
     )
   )
 // test simpleFixExp
+printfn "%A" (reduceAll simpleFixExp)
 
 // μadd.λxy.(if iszero y then x else add x y)
 let fixExp =
@@ -331,4 +338,7 @@ let fixExp =
     )
   )
 // test fixExp
+printfn "%A" (reduceAll fixExp)
+let fixExp' = App(App(fixExp, Succ Zero), Succ(Succ (Succ Zero)))
+printfn "%A" (reduceAll fixExp')
 printfn "\n"
