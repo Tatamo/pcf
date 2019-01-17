@@ -80,19 +80,27 @@ let rec getNewVariableName fv baseName =
   if Set.contains baseName fv then getNewVariableName fv (String.Format("{0}'", baseName)) else baseName
 
 let rec substitute exp1 name exp2 =
-  match exp1 with
-  | Var(name') -> if name' = name then exp2 else Var(name')
-  | App(e1,e2) -> App(substitute e1 name exp2, substitute e2 name exp2)
-  | Lambda(name', e) ->
-    if name' = name then Lambda(name', e) else
+  printfn "substitute %A[%A:=%A]" exp1 name exp2
+  let mapLambda _ name exp2 (name', e) =
+    if name' = name then (name', e) else
     let fv1 = getFreeVariables e in
     let fv2 = getFreeVariables exp2 in
     if Set.contains name fv1 && Set.contains name' fv2 then
       let freshName = getNewVariableName (Set.union fv1 fv2) name' in
-      Lambda(freshName, substitute (substitute e name' (Var freshName)) name exp2)
+      (freshName, substitute (substitute e name' (Var freshName)) name exp2)
     else
-      Lambda(name', substitute e name exp2)
-  | _ -> Error(None)
+      (name', substitute e name exp2)
+    in
+  match exp1 with
+  | True | False | Zero | Error(_)-> exp1
+  | Succ(e) -> Succ(substitute e name exp2)
+  | Pred(e) -> Pred(substitute e name exp2)
+  | IsZero(e) -> IsZero(substitute e name exp2)
+  | If(e1,e2,e3) -> If(substitute e1 name exp2, substitute e2 name exp2, substitute e3 name exp2)
+  | Var(name') -> if name' = name then exp2 else Var(name')
+  | App(e1,e2) -> App(substitute e1 name exp2, substitute e2 name exp2)
+  | Lambda(name', e) -> Lambda (mapLambda exp1 name exp2 (name', e))
+  | Fix(name', e) -> Fix (mapLambda exp1 name exp2 (name', e))
 
 (*
 let m = App(Var("x1"),Var("x2"))
@@ -102,6 +110,10 @@ let s1 = substitute m "x1" n1
 let s2 = substitute s1 "x2" (Var("N2"))
 printfn "%A" s1
 printfn "%A" s2
+
+printfn "%A" (substitute (Lambda("y",  App(Var ("x"), Var ("y")))) "x" (Lambda("z", Var("z"))))
+printfn "%A" (substitute (Lambda("y",  App(Var ("x"), Var ("y")))) "x" (Lambda("z", App(Var("z"), Var("y")))))
+printfn "%A" (substitute (Fix("f",  App(Var ("f"), Var ("x")))) "x" (Lambda("z", App(Var("z"), Var("f")))))
 *)
 
 let rec reduce exp =
