@@ -14,7 +14,6 @@ type Exp =
   | Fix of string * Exp
   | Error of string option
 
-
 // Succ^n(Zero) の形かどうかを判定する
 let rec isNumericValue exp =
   match exp with
