@@ -1,17 +1,20 @@
 module SampleExpressions
+open Type
 open Exp
 
-// (λx.if iszero x then zero else (λy.succ succ y) x) 0
+// (λx:num.if iszero x then zero else (λy:num.succ succ y) x) 0
 let applyExp =
   App(
     Lambda(
       "x",
+      Num,
       If(
         IsZero(Var("x")),
         Zero,
         App(
           Lambda(
             "y",
+            Num,
             Succ(Succ(Var("y")))
           ),
           Var("x")
@@ -27,8 +30,10 @@ let curryFuncExp =
     App(
       Lambda(
         "x",
+        Num,
         Lambda(
           "y",
+          Num,
           If(
             Var("x"),
             Succ(Var("y")),
@@ -41,11 +46,12 @@ let curryFuncExp =
     Succ(Zero)
   )
 
-// (λf.f 0)(λx.x)
+// (λf:num->num.f 0)(λx:num.x+1)
 let funcFuncExp =
   App(
     Lambda(
       "f",
+      Func(Num,Num),
       App(
         Var("f"),
         Zero
@@ -53,16 +59,19 @@ let funcFuncExp =
     ),
     Lambda(
       "x",
+      Num,
       Succ(Var("x"))
     )
   )
 
-// μf.λx.fx
+// μf:num->num.λx:num.fx
 let simpleFixExp =
   Fix(
     "f",
+    Func(Num,Num),
     Lambda(
       "x",
+      Num,
       App(
         Var("f"),
         Var("x")
@@ -70,14 +79,17 @@ let simpleFixExp =
     )
   )
 
-// μadd.λxy.(if iszero y then x else add x y)
+// μadd:num->num->num.λx:num.λy:num.(if iszero y then x else add x y)
 let fixExp =
   Fix(
     "add",
+    Func(Num,Func(Num,Num)),
     Lambda(
       "x",
+      Num,
       Lambda(
         "y",
+        Num,
         If(
           IsZero(Var("y")),
           Var("x"),

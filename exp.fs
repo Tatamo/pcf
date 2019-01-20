@@ -1,4 +1,5 @@
 module Exp
+open Type
 
 type Exp = 
   | True
@@ -10,8 +11,8 @@ type Exp =
   | IsZero of Exp
   | If of Exp * Exp * Exp
   | App of Exp * Exp
-  | Lambda of string * Exp
-  | Fix of string * Exp
+  | Lambda of string * Type * Exp
+  | Fix of string * Type * Exp
   | Error of string option
 
 // Succ^n(Zero) の形かどうかを判定する
