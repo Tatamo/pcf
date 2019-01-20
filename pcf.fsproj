@@ -10,6 +10,7 @@
     <Compile Include="exp.fs" />
     <Compile Include="checkType.fs" />
     <Compile Include="reduction.fs" />
+    <Compile Include="format.fs" />
     <Compile Include="sampleExpressions.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
