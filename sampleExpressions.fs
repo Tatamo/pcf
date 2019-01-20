@@ -24,13 +24,13 @@ let applyExp =
     Succ(Zero)
   )
 
-// (λx.λy.if x then succ y else 0) true 1
+// (λx:bool.λy:num.if x then succ y else 0) true 1
 let curryFuncExp =
   App(
     App(
       Lambda(
         "x",
-        Num,
+        Bool,
         Lambda(
           "y",
           Num,
