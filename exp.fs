@@ -1,6 +1,7 @@
 module Exp
 open Type
 
+type TypedVar = string * Type
 type Exp = 
   | True
   | False
@@ -11,8 +12,8 @@ type Exp =
   | IsZero of Exp
   | If of Exp * Exp * Exp
   | App of Exp * Exp
-  | Lambda of string * Type * Exp
-  | Fix of string * Type * Exp
+  | Lambda of TypedVar * Exp
+  | Fix of TypedVar * Exp
   | Error of string option
 
 // Succ^n(Zero) の形かどうかを判定する

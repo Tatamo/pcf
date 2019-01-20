@@ -6,15 +6,13 @@ open Exp
 let applyExp =
   App(
     Lambda(
-      "x",
-      Num,
+      ("x", Num),
       If(
         IsZero(Var("x")),
         Zero,
         App(
           Lambda(
-            "y",
-            Num,
+            ("y", Num),
             Succ(Succ(Var("y")))
           ),
           Var("x")
@@ -29,11 +27,9 @@ let curryFuncExp =
   App(
     App(
       Lambda(
-        "x",
-        Bool,
+        ("x", Bool),
         Lambda(
-          "y",
-          Num,
+          ("y", Num),
           If(
             Var("x"),
             Succ(Var("y")),
@@ -50,16 +46,14 @@ let curryFuncExp =
 let funcFuncExp =
   App(
     Lambda(
-      "f",
-      Func(Num,Num),
+      ("f", Func(Num,Num)),
       App(
         Var("f"),
         Zero
       )
     ),
     Lambda(
-      "x",
-      Num,
+      ("x", Num),
       Succ(Var("x"))
     )
   )
@@ -67,11 +61,9 @@ let funcFuncExp =
 // μf:num->num.λx:num.fx
 let simpleFixExp =
   Fix(
-    "f",
-    Func(Num,Num),
+    ("f", Func(Num,Num)),
     Lambda(
-      "x",
-      Num,
+      ("x", Num),
       App(
         Var("f"),
         Var("x")
@@ -82,14 +74,11 @@ let simpleFixExp =
 // μadd:num->num->num.λx:num.λy:num.(if iszero y then x else add x y)
 let fixExp =
   Fix(
-    "add",
-    Func(Num,Func(Num,Num)),
+    ("add", Func(Num,Func(Num,Num))),
     Lambda(
-      "x",
-      Num,
+      ("x", Num),
       Lambda(
-        "y",
-        Num,
+        ("y", Num),
         If(
           IsZero(Var("y")),
           Var("x"),

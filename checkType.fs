@@ -4,7 +4,7 @@ open Exp
 
 type Env = string -> Type option
 let emptyEnv (_: string) = None: Type option
-let updateEnv env name t: Env =
+let updateEnv env (name, t): Env =
   fun key -> if key = name then (Some t) else env key
 
 let rec checkType exp env =
@@ -43,12 +43,12 @@ let rec checkType exp env =
     | Func(σ, τ) ->
       if σ = t2 then τ else TypeError
     | _ -> TypeError
-  | Lambda(name,t,e) ->
+  | Lambda(v, e) ->
     // Γ,x:σ ⊦ M : τ ⇒ Γ ⊦ λx:σ.M : σ->τ
-    let τ = checkType e (updateEnv env name t) in
-    Func(t, τ)
-  | Fix(name,t,e) ->
+    let τ = checkType e (updateEnv env v) in
+    Func(snd v, τ)
+  | Fix(v,e) ->
     // Γ,x:σ ⊦ M : σ ⇒ Γ ⊦ μx:σ.M : σ
-    let σ = checkType e (updateEnv env name t) in
-    if σ = t then σ else TypeError
+    let σ = checkType e (updateEnv env v) in
+    if σ = snd v then σ else TypeError
   | _ -> TypeError
