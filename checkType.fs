@@ -5,7 +5,7 @@ open Exp
 type Env = string -> Type option
 let emptyEnv (_: string) = None: Type option
 let updateEnv env name t: Env =
-  fun key -> if key = name then (Some t) else env name
+  fun key -> if key = name then (Some t) else env key
 
 let rec checkType exp env =
   // printfn "%A, %A" (env "x") (env "y")
