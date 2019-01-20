@@ -10,8 +10,8 @@ let rec formatType t =
   | TypeError -> "TypeError"
   | Func(t1, t2) ->
     match t1 with
-    | Func(_) -> String.Format("({0}) -> {1}", formatType t1, formatType t2)
-    | _ -> String.Format("{0} -> {1}", formatType t1, formatType t2)
+    | Func(_) -> String.Format("({0})->{1}", formatType t1, formatType t2)
+    | _ -> String.Format("{0}->{1}", formatType t1, formatType t2)
 
 let rec formatNumber exp =
   match exp with
