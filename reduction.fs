@@ -52,6 +52,7 @@ let rec reduce exp =
   | If(e1,e2,e3) -> reduceIf e1 e2 e3
   | App(e1, e2) -> reduceApp e1 e2
   | Fix(v, e) -> reduceFix v e
+  | Error(s) -> Error(s)
   | _ -> Error(None)
 // Pred(exp) のexpが渡される
 and reducePred exp =
@@ -61,10 +62,12 @@ and reducePred exp =
     match e with
     | NumericValue(n) -> n
     | _ -> Pred(reduce (Succ(e)))
+  | Error(s) -> Error(s)
   | _ -> Pred(reduce exp)
 and reduceSucc exp =
   match exp with
   | NumericValue(_) -> Error(Some("value cannot be reduced"))
+  | Error(s) -> Error(s)
   | _ -> Succ(reduce exp)
 and reduceIsZero exp =
   match exp with
@@ -73,11 +76,13 @@ and reduceIsZero exp =
     match e with
     | NumericValue(_) -> False
     | _ -> IsZero(Succ(reduce e))
+  | Error(s) -> Error(s)
   | _ -> IsZero(reduce exp)
 and reduceIf exp1 exp2 exp3 =
   match exp1 with
   | True -> exp2
   | False -> exp3
+  | Error(s) -> Error(s)
   | _ -> If(reduce exp1, exp2, exp3)
 and reduceApp exp1 exp2 =
   match exp1 with
@@ -85,6 +90,7 @@ and reduceApp exp1 exp2 =
     match substitute exp v exp2 with
     | Some(e) -> e
     | None -> Error(Some("TypeError"))
+  | Error(s) -> Error(s)
   | _ -> App(reduce exp1, exp2)
 and reduceFix v exp =
   match substitute exp v (Fix(v,exp)) with
