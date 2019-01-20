@@ -41,3 +41,13 @@ let isValue exp =
   | _ -> false
 
 let (|Value|_|) (exp:Exp) = if isValue exp then Some(exp) else None
+
+let isAbstraction exp =
+  match exp with
+  | Lambda(_) | Fix(_) -> true
+  | _ -> false
+
+let isApply exp =
+  match exp with
+  | Value(_) | Var(_) -> false
+  | _ -> true
